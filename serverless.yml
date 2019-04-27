@@ -7,12 +7,30 @@ plugins:
 
 provider:
   name: aws
+  profile: dev
   runtime: nodejs8.10
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sqs:SendMessage"
+        - "sqs:GetQueueUrl"
+      Resource: "arn:aws:sqs:${self:provider.region}:886740953333:StudyQueue"
+    - Effect: "Allow"
+      Action:
+        - "sqs:ListQueues"
+      Resource: "arn:aws:sqs:${self:provider.region}:886740953333:*"
 
 functions:
-  hello:
-    handler: handler.hello
+  sender:
+    handler: functions/sender.handler
     events:
       - http:
-          method: get
-          path: hello
+          method: post
+          path: sender
+  receiver:
+    handler: functions/receiver.handler
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:886740953333:StudyQueue
+          batchSize: 1
